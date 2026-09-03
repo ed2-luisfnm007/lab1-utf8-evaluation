@@ -39,24 +39,56 @@ std::vector<std::uint8_t> leer_archivo(const std::string &ruta)
 
 bool es_continuacion(std::uint8_t byte) noexcept
 {
-    // E02 TODO: use una mascara para reconocer el patron 10xxxxxx.
-    (void)byte;
-    return false;
+    return ((byte & 0xC0) == 0x80);
 }
 
 int longitud_secuencia(std::uint8_t byte_lider) noexcept
 {
-    // E03 TODO: identifique los patrones de 1, 2, 3 y 4 bytes.
-    (void)byte_lider;
+    if (es_continuacion(byte_lider))
+    {
+        return 0;
+    }
+
+    // 0x80  0x00
+    // 0xE0  0xC0
+    // 0xF0  0xE0
+    // 0xF8  0xF0
+
+    if ((byte_lider & 0x80) == 0x00)
+    {
+        return 1; // one byte
+    }
+
+    if ((byte_lider & 0xE0) == 0xC0)
+    {
+        return 2; // two bytes
+    }
+
+    if ((byte_lider & 0xF0) == 0xE0)
+    {
+        return 3;
+    }
+
+    if ((byte_lider & 0xF8) == 0xF0)
+    {
+        return 4;
+    }
+
     return -1;
 }
 
 std::uint32_t decodificar_2(std::uint8_t b1, std::uint8_t b2) noexcept
 {
     // E04 TODO: extraiga y combine los bits utiles.
-    (void)b1;
-    (void)b2;
-    return 0;
+
+    if (longitud_secuencia(b1) != 2)
+        return 0;
+
+    if (!es_continuacion(b2))
+        return 0;
+
+    std::uint32_t codep = (((b1 & 0x1F) << 6) | (b2 & 0x3F));
+    return codep;
 }
 
 std::uint32_t
