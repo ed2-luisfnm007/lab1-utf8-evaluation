@@ -94,11 +94,16 @@ std::uint32_t decodificar_2(std::uint8_t b1, std::uint8_t b2) noexcept
 std::uint32_t
 decodificar_3(std::uint8_t b1, std::uint8_t b2, std::uint8_t b3) noexcept
 {
-    // E05 TODO: extraiga y combine los bits utiles.
-    (void)b1;
-    (void)b2;
-    (void)b3;
-    return 0;
+    if (longitud_secuencia(b1) != 3)
+        return 0;
+
+    if (!es_continuacion(b2))
+        return 0;
+
+    std::uint32_t codep =
+            (((b1 & 0x0F) << 12) | ((b2 & 0x3F) << 6) | (b3 & 0x3F));
+
+    return codep;
 }
 
 std::uint32_t decodificar_4(std::uint8_t b1,
